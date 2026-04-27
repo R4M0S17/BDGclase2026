@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lucid - Project Alpha Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#e6ffee",
+                        "on-secondary-fixed": "#36404d",
+                        "primary-fixed-dim": "#c2d4ff",
+                        "tertiary-dim": "#005f40",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-dim": "#d3dbe2",
+                        "outline-variant": "#acb3b8",
+                        "secondary-fixed-dim": "#cbd5e6",
+                        "on-primary-container": "#004fa7",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#005bbf",
+                        "on-background": "#2d3338",
+                        "surface-tint": "#005bbf",
+                        "error-container": "#fe8983",
+                        "secondary-container": "#d9e3f4",
+                        "on-secondary-container": "#485260",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "tertiary-container": "#69f6b8",
+                        "on-surface-variant": "#596065",
+                        "on-primary": "#f7f7ff",
+                        "background": "#f9f9fb",
+                        "on-error": "#fff7f6",
+                        "surface-variant": "#dde3e9",
+                        "error": "#9f403d",
+                        "primary-dim": "#0050a8",
+                        "on-error-container": "#752121",
+                        "on-primary-fixed": "#003d84",
+                        "secondary-fixed": "#d9e3f4",
+                        "on-surface": "#2d3338",
+                        "surface-container": "#ebeef2",
+                        "on-primary-fixed-variant": "#0058b9",
+                        "tertiary": "#006d4a",
+                        "tertiary-fixed": "#69f6b8",
+                        "on-tertiary-fixed-variant": "#006544",
+                        "primary-fixed": "#d7e2ff",
+                        "inverse-primary": "#498eff",
+                        "inverse-surface": "#0c0e10",
+                        "secondary-dim": "#4a5462",
+                        "secondary": "#56606e",
+                        "error-dim": "#4e0309",
+                        "on-secondary": "#f7f9ff",
+                        "inverse-on-surface": "#9c9d9f",
+                        "on-tertiary-container": "#005a3c",
+                        "on-secondary-fixed-variant": "#525c6a",
+                        "surface-container-high": "#e4e9ee",
+                        "surface-container-highest": "#dde3e9",
+                        "on-tertiary-fixed": "#00452d",
+                        "surface": "#f9f9fb",
+                        "surface-bright": "#f9f9fb",
+                        "outline": "#757c81",
+                        "primary-container": "#d7e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex min-h-screen">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f6] dark:bg-[#1a1c1e] flex flex-col p-4 gap-2 z-40">
+<!-- Header Identity -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">dataset</span>
+</div>
+<div>
+<h2 class="text-xl font-black tracking-[-0.02em] text-[#0c0e10] dark:text-[#f9f9fb]">Mini JIRA</h2>
+<p class="font-['Inter'] text-[11px] leading-[1.6] text-on-surface-variant/70 uppercase tracking-widest font-semibold">Product Team</p>
+</div>
+</div>
+<!-- Main Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-[#5c646c] dark:text-[#acb3b8] hover:bg-[#e4e9ee] dark:hover:bg-[#2a2c2e] rounded-md transition-colors font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]">timeline</span>
+                Roadmap
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#5c646c] dark:text-[#acb3b8] hover:bg-[#e4e9ee] dark:hover:bg-[#2a2c2e] rounded-md transition-colors font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+                Backlog
+            </a>
+<a class="bg-white dark:bg-[#ffffff0a] text-[#006ADC] dark:text-white font-medium rounded-md shadow-[0px_2px_4px_rgba(0,0,0,0.02)] flex items-center gap-3 px-3 py-2 font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+                Board
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#5c646c] dark:text-[#acb3b8] hover:bg-[#e4e9ee] dark:hover:bg-[#2a2c2e] rounded-md transition-colors font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+                Reports
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#5c646c] dark:text-[#acb3b8] hover:bg-[#e4e9ee] dark:hover:bg-[#2a2c2e] rounded-md transition-colors font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]">error_outline</span>
+                Issues
+            </a>
+</nav>
+<!-- CTA from JSON -->
+<button class="mt-4 mb-8 bg-gradient-to-br from-primary to-primary-dim text-on-primary py-2.5 px-4 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            Create Issue
+        </button>
+<!-- Footer Navigation -->
+<div class="space-y-1 pt-4 border-t border-outline-variant/10">
+<a class="flex items-center gap-3 px-3 py-2 text-[#5c646c] dark:text-[#acb3b8] hover:bg-[#e4e9ee] dark:hover:bg-[#2a2c2e] rounded-md transition-colors font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#5c646c] dark:text-[#acb3b8] hover:bg-[#e4e9ee] dark:hover:bg-[#2a2c2e] rounded-md transition-colors font-['Inter'] text-[13px] leading-[1.6]" href="#">
+<span class="material-symbols-outlined text-[18px]">contact_support</span>
+                Support
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 min-h-screen flex flex-col">
+<!-- TopNavBar (Authority Source: JSON) -->
+<header class="bg-[#f9f9fb]/80 dark:bg-[#0c0e10]/80 backdrop-blur-xl flex justify-between items-center px-8 py-3 w-full sticky top-0 z-50 shadow-[0px_12px_32px_rgba(12,14,16,0.04)]">
+<div class="flex items-center gap-6">
+<span class="text-lg font-bold tracking-tighter text-[#0c0e10] dark:text-[#f9f9fb]">Lucid</span>
+<!-- Search Bar (on_left per JSON) -->
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute left-3 text-outline-variant text-[20px] group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-1.5 text-sm w-72 focus:ring-2 focus:ring-primary/20 placeholder:text-outline-variant font-['Inter'] transition-all" placeholder="Search tasks, sprints..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 text-[#acb3b8]">
+<button class="p-2 hover:bg-[#f2f4f6] dark:hover:bg-[#1a1c1e] rounded-full transition-all duration-200">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+</button>
+<button class="p-2 hover:bg-[#f2f4f6] dark:hover:bg-[#1a1c1e] rounded-full transition-all duration-200">
+<span class="material-symbols-outlined text-[22px]">help_outline</span>
+</button>
+<button class="p-2 hover:bg-[#f2f4f6] dark:hover:bg-[#1a1c1e] rounded-full transition-all duration-200">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant/20 mx-1"></div>
+<img alt="User profile" class="w-8 h-8 rounded-full ring-2 ring-background shadow-sm object-cover" data-alt="portrait of a professional woman with a minimalist modern background, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-MoNRVB_x7syN2M3lQfTpziwt4yOfTubiT6WRdBBVEYlKl9Z0q2LTk3ILQsUilBHjLXT-AVOg8jYZKRN2t2LaeILIlpMUB0fvZwn-ahypu7nmR5bCkMch3uJN83tRkbqeiyA4vu0vtbcOyhkSRGn9aWfyFSesfsX5oi6aabUuszgVzE4C3bVG4HyAKAyRvrYlsCp35Ky9vMHg4ZQpPwcG5ngun9Kpsy2jdj4qMVqjLuxkhoP1KEafcDJR589uZS40kqjRktrBcIg"/>
+</div>
+</header>
+<!-- Board Section -->
+<section class="p-8 flex-1 flex flex-col gap-8">
+<!-- Header Section -->
+<div class="flex items-end justify-between">
+<div class="space-y-1">
+<nav class="flex items-center gap-2 text-[11px] font-bold text-outline uppercase tracking-[0.1em]">
+<span>Projects</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Alpha</span>
+</nav>
+<h1 class="text-[2.75rem] font-bold tracking-[-0.02em] text-on-surface">Sprint Board</h1>
+</div>
+<div class="flex items-center gap-3 pb-2">
+<div class="flex -space-x-2 mr-4">
+<img alt="Team member" class="w-8 h-8 rounded-full border-2 border-background object-cover" data-alt="professional male portrait with soft neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNSYv3sUfV-LU5IPAb18weIhdF90twKKZaOoFLWRtLiTLYvMSHIzHakKcpLhs2ho02ezGrbneG9noB-kh5_h0ZiDBQJwhryEFXYaDAxgAoYc9q09g5adl9gkZkCi2Vtg8vUpyrPQB2-Pzs3wYurSUKB_P3snc-F8ptNleG1RVWQFOwfdetyb22wuToC-Q39JDIuaeBmMVjwOEaN07uVHjsf_CrPPeR9Gkt6LZQUtTpJQ1x1oG4t77pqcg4h9uKQhGVPw8ltAV9III"/>
+<img alt="Team member" class="w-8 h-8 rounded-full border-2 border-background object-cover" data-alt="smiling woman with minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8gx28b7Ww_FspZX8QdNzouBuL-8Y00uQ5-9oZLP4fDAsVTeT8M24LLxWGO520qzfkkCedF35Z0FZwhs78AchG1tvAZhJgdjVK96dVb-oUzbS10vHuSZy5jQ-cr5XnIvfW0tWTHTfolzWQadZvMojto_yvBCaGsM5Os4jV2hDcPe31gb13NC4O3X68b1Sshi_93M-fKGJcVfdLPC4Xd1lDHDJaM8U_HkQoUU1SbFCvhSAcG1z4iUbyaojwXFCtMXwTg73Sen8PfiU"/>
+<img alt="Team member" class="w-8 h-8 rounded-full border-2 border-background object-cover" data-alt="creative professional portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4Z8cyxIxuRhdbtjcJNRFZ4fiE2xKDMQTtdGFUpU-7f4Y-PBOaalwmqfWr3q1UQtbd1ZTfzZWHp4bOyUeoGuLnSE7R5cd_xxlvwx-aHUHrn2x_idgXAUseMhVfSnF8l2URedykghL60BCH9dSl1PWzyGFZfhxiVU5VH0AROqY4euTsuMvaBN9QjYPugFyPh3pDJmbwpjLC9IJDdy9_jgU2snlDRE2wqPUxpkP1iNfcTjO4qVnytUd00_YTQdvU3mTxtUpXIP5W35k"/>
+<div class="w-8 h-8 rounded-full border-2 border-background bg-surface-container flex items-center justify-center text-[10px] font-bold text-on-surface-variant">+4</div>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-xl text-sm font-medium hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-xl text-sm font-medium hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">share</span>
+                        Share
+                    </button>
+</div>
+</div>
+<!-- Kanban Board Grid -->
+<div class="grid grid-cols-4 gap-6 flex-1 items-start">
+<!-- Column: To-Do -->
+<div class="flex flex-col gap-4 min-h-[500px]">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<h3 class="text-xs font-bold uppercase tracking-wider text-outline">To-Do</h3>
+<span class="text-[10px] font-bold bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded">1</span>
+</div>
+<button class="text-outline-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+<!-- Ticket 1 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_12px_32px_rgba(12,14,16,0.04)] hover:shadow-[0px_16px_48px_rgba(12,14,16,0.08)] transition-all cursor-grab active:cursor-grabbing">
+<div class="flex justify-between items-start mb-3">
+<span class="text-[10px] font-bold text-error bg-error-container/20 px-2 py-0.5 rounded-full uppercase tracking-wider">High Priority</span>
+<span class="text-[11px] font-bold text-outline-variant">ALPHA-102</span>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug mb-4">Update login flow</h4>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2 text-outline-variant">
+<span class="material-symbols-outlined text-[16px]">chat_bubble_outline</span>
+<span class="text-[11px] font-medium">3</span>
+<span class="material-symbols-outlined text-[16px] ml-1">attachment</span>
+<span class="text-[11px] font-medium">1</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined text-[16px]">person_add</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: In Progress -->
+<div class="flex flex-col gap-4 min-h-[500px]">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<h3 class="text-xs font-bold uppercase tracking-wider text-outline">In Progress</h3>
+<span class="text-[10px] font-bold bg-primary-container text-on-primary-container px-1.5 py-0.5 rounded">2</span>
+</div>
+<button class="text-outline-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+<!-- Ticket 2 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_12px_32px_rgba(12,14,16,0.04)] hover:shadow-[0px_16px_48px_rgba(12,14,16,0.08)] transition-all cursor-grab active:cursor-grabbing">
+<div class="flex justify-between items-start mb-3">
+<span class="text-[10px] font-bold text-primary bg-primary-container/40 px-2 py-0.5 rounded-full uppercase tracking-wider">Medium</span>
+<span class="text-[11px] font-bold text-outline-variant">ALPHA-89</span>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug mb-4">Refactor API endpoints</h4>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2 text-outline-variant">
+<span class="material-symbols-outlined text-[16px]">notes</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-semibold text-outline-variant">Alex</span>
+<img alt="Alex" class="w-6 h-6 rounded-full object-cover" data-alt="professional male headshot for user profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu-2V61YZl0er28YBO8dDdMUswNx0TSA-VxsEc_4w-0R1RHnJOrVLTyinLmm7P54G5IFmHB3JZRl8HtGTlWS52Oc2a1jUDZL77Vnxyg4AoRRCfW_HWek8nw4utcySAxB2rhoX89fOst9-HzMifIheII36Kbu4hQRn4UYaHrrlcHVxl6Twk1BJjpPlrPRosAt0jvgWXuYYeqcyKOfjC8JFT_w6KpQqZsn3vNPEpMY8hz7RMtzTL_FCOhNyyFp49vEBhTvFGQ5S72ZA"/>
+</div>
+</div>
+</div>
+<!-- Ticket 3 (BLOCKED) -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_12px_32px_rgba(12,14,16,0.04)] hover:shadow-[0px_16px_48px_rgba(12,14,16,0.08)] transition-all cursor-grab active:cursor-grabbing border-l-4 border-error">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1.5">
+<span class="text-[10px] font-bold text-on-error-container bg-error-container px-2 py-0.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[12px]">block</span> BLOCKED
+                                </span>
+</div>
+<span class="text-[11px] font-bold text-outline-variant">ALPHA-114</span>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug mb-4">UI bug on mobile</h4>
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-error uppercase tracking-wider">High priority</span>
+<img alt="Assignee" class="w-6 h-6 rounded-full object-cover" data-alt="woman user profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC72cshgQtU8Wyvhqd6MKHhRqoNYigS9nSDsq-xusD56Kn1NrK2-Q-jzXYwtOytItNmdAz2U98aPVwjP0V3s8Sbm-BZKPwF0wOPoM1e8TbZsrTzVnzx8G61Eut1DWCtYeSz-cgIOrZwgwEs6u7W5s-SnwfRvbCGhNBNJMWmboXrF8PwieQwcFS5AfGaYPSODPd6J0KyiLoUrQ_DnGeCzET5laCmTCPgzpv_MDhnNWq6NDdISefYzeNd_TRV68a80MNQ3a4uLNnLDZQ"/>
+</div>
+</div>
+</div>
+<!-- Column: Review -->
+<div class="flex flex-col gap-4 min-h-[500px]">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-dim"></span>
+<h3 class="text-xs font-bold uppercase tracking-wider text-outline">Review</h3>
+<span class="text-[10px] font-bold bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded">0</span>
+</div>
+<button class="text-outline-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+<div class="border-2 border-dashed border-outline-variant/20 rounded-xl h-32 flex flex-col items-center justify-center gap-2 text-outline-variant opacity-50">
+<span class="material-symbols-outlined text-[24px]">move_to_inbox</span>
+<span class="text-[11px] font-semibold">Drop items here</span>
+</div>
+</div>
+<!-- Column: Done -->
+<div class="flex flex-col gap-4 min-h-[500px]">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<h3 class="text-xs font-bold uppercase tracking-wider text-outline">Done</h3>
+<span class="text-[10px] font-bold bg-tertiary-container text-on-tertiary-fixed px-1.5 py-0.5 rounded">1</span>
+</div>
+<button class="text-outline-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+<!-- Ticket 4 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0px_4px_12px_rgba(12,14,16,0.02)] opacity-80 transition-all cursor-grab active:cursor-grabbing border-t-4 border-tertiary-container">
+<div class="flex justify-between items-start mb-3">
+<span class="text-[10px] font-bold text-on-tertiary-fixed bg-tertiary-container px-2 py-0.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> DONE
+                            </span>
+<span class="text-[11px] font-bold text-outline-variant line-through">ALPHA-01</span>
+</div>
+<h4 class="text-sm font-semibold text-outline-variant line-through leading-snug mb-4">Setup project repo</h4>
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Low priority</span>
+<div class="flex items-center gap-2">
+<img alt="Assignee" class="w-6 h-6 rounded-full object-cover" data-alt="professional male headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ_SBXRldf21PCi0voGvasax-IzoWCQya6AsecYVAmRfRvsNIFSYQ4WVGSRLt0QbZIrpLOGzAp53bMZiCKtA0bfm09xTpJuDSqhneW-q2g9wPZZsn5hBHFOsUBXB5g3SFihHRWf9bz2E5g2X2agW6S2OXPLEqCsWYNOm8lqQIcFyZ8QZQpyTr2W1Z8fRj43BKcDjUxvR8Qe5BqpM0JNytsCTOWo9rpzCxkBZ28IhEpdl5-zrKIvZkSZvOJPzyO_KdRFoyoUZDAFFA"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual FAB (Hidden on board, usually used for quick actions) -->
+<!-- Suppressed on board view per JSON mandate for detail/transactional focused screens if needed, 
+         but JIRA usually keeps 'Create' visible. However, following JSON logic: Shell FAB suppression for transactional. -->
+</body></html>

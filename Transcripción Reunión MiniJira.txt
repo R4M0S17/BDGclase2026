@@ -1,0 +1,70 @@
+TRANSCRIPCIÓN DE REUNIÓN: Kick-off Proyecto "Mini Jira"
+Fecha: 24 de Octubre
+Participantes: Laura (PO), Marcos (Tech Lead), Sofía (Dev Junior), Roberto (PM)
+
+[09:00]
+Roberto: Bueno, gracias a todos por estar aquí. La idea es arrancar con el "Mini Jira". Es una herramienta interna para nosotros, somos 10, así que no debería ser algo de otro mundo. El objetivo es tener la primera versión funcionando en... bueno, tres semanas.
+Marcos: Espera, ¿tres semanas? ¿Contando desarrollo, testing y despliegue?
+Roberto: Sí, es lo que hablamos con dirección. Es algo "ligero".
+Laura: Exacto. Lo que yo busco, chicos, es que sea algo súper fácil de usar. Que se vea bonito, ¿saben? Que no sea tan gris como el Jira de verdad. Algo que entre por los ojos y que cualquiera pueda usar sin un manual de cien páginas.
+Marcos: "Fácil de usar" no es un requerimiento técnico, Laura. ¿A qué te refieres con "bonito"? ¿Tenemos un sistema de diseño o usamos una librería de componentes?
+Laura: No sé, algo moderno. Que sea intuitivo. Un formulario web sencillo donde metas lo que tienes que hacer y ya.
+
+[09:05]
+Sofía: Perdón, tengo una duda de base... ¿cómo entra la gente? ¿Hay un login o usamos las cuentas de la empresa?
+Laura: Este... bueno, supongo que habrá usuarios normales y administradores. Los administradores gestionan todo y los otros solo crean sus cositas.
+Marcos: Pero, ¿qué es "todo"? ¿Un admin puede borrar tickets de otros? ¿Puede editar el tiempo de trabajo? Si vamos a usar React con Node para esto, necesito definir la estructura de roles ahora.
+Laura: No compliquemos las cosas, Marcos. Admin es el que manda y el usuario es el que trabaja.
+Roberto: Volviendo a las funciones, Laura mencionó crear, editar y eliminar tickets. Eso es lo básico. También asignar personas.
+Sofía: ¿Y qué pasa si dos personas abren el mismo ticket para editarlo a la vez? ¿Se bloquea el ticket o se sobreescribe?
+Roberto: (Ignorando la pregunta) Laura, ¿qué campos necesitamos en el ticket?
+Laura: Pues lo típico: un título, una descripción larga y... no sé, que se pueda filtrar.
+
+[09:10]
+Marcos: ¿Filtrar por qué criterios? ¿Fecha, prioridad, etiquetas?
+Laura: Sí, por todo eso. Que sea potente pero sencillo. Ah, y los estados. Es fundamental que el ticket pase por estados. Yo había pensado en: Por hacer, En progreso y Listo.
+Marcos: Eso es muy limitado para nuestro flujo. Necesitamos al menos un estado de "Review" y otro de "Blocked". Si no, los desarrolladores no sabremos qué está parado por dependencias externas.
+Laura: No quiero que la pantalla se llene de columnas. Tres columnas es limpio. Cinco es un lío visual.
+Roberto: Podríamos dejarlo en cuatro...
+Marcos: Roberto, si el ticket está bloqueado y lo dejas en "En progreso", las métricas van a ser un desastre. Por cierto, ¿qué base de datos vamos a usar? Yo asumo una relacional para evitar líos con los estados.
+Laura: No sé de bases de datos, pero quiero que sea rápido. Que no tarde en cargar.
+
+[09:15]
+Marcos: Si quieres rapidez y filtros "por todo", tres semanas es una fantasía. Solo en la autenticación y el manejo de estados nos vamos a comer una semana.
+Roberto: Vamos, Marcos, no seas pesimista. Sofía puede ayudar con el frontend de los formularios.
+Sofía: Sí, claro, yo puedo ir haciendo los inputs, pero... sigo sin saber qué pasa con la edición concurrente que pregunté antes. ¿Si guardo y alguien más guardó antes, pierdo mis cambios?
+Marcos: Luego vemos eso, Sofía, es un caso de borde. Laura, ¿el tema de los comentarios cómo va?
+Laura: Ah, sí, comentarios. Que la gente pueda hablar en el ticket. Y ahora que lo mencionas, sería genial que llegue un email cada vez que alguien te mencione o te asigne algo.
+Marcos: (Suspira) ¿Notificaciones por email? Eso no estaba en el borrador inicial. Eso implica configurar un servicio de mensajería, plantillas de correo...
+Laura: Es que si no, nadie se entera de nada. Ah, y un dashboard. Un dashboard con gráficas de cuántos tickets cerramos al mes. Para que los jefes vean que trabajamos.
+
+[09:20]
+Roberto: El dashboard me parece excelente para el reporte mensual. Anótalo, Marcos.
+Marcos: Roberto, estamos metiendo notificaciones y analíticas en un proyecto de tres semanas que ni siquiera tiene definido el esquema de permisos. Es inviable.
+Laura: Pero Marcos, si solo es un formulario web. No puede ser tan difícil. Yo vi un tutorial donde hacían un clon de Twitter en una tarde.
+Marcos: (Pausa tensa) Un clon de Twitter no es una herramienta de gestión interna con lógica de negocio y permisos. ¿Quién puede borrar tickets? ¿Cualquier usuario puede borrar un ticket que ya está "Listo"?
+Laura: Pues... supongo que no. Solo el que lo creó. O el admin. Bueno, mejor que nadie borre nada, que solo se archiven. Pero que el botón diga "Eliminar" para que sea más claro.
+Sofía: Entonces, ¿el botón de eliminar no elimina?
+
+[09:25]
+Roberto: No nos detengamos en semántica. Lo importante es que el lunes que viene tengamos ya algo para ver. Un "esqueleto".
+Marcos: No voy a tener un esqueleto con emails y gráficas el lunes. Tendrás, con suerte, una tabla con datos mockeados en React.
+Laura: Chicos, confío en ustedes. El diseño es clave. Que sea muy Apple, ¿me explico? Blanco, limpio, sombras suaves.
+Sofía: Marcos, si usamos Node, ¿usaremos algún ORM o consultas directas? Porque si los estados van a cambiar después de que empecemos...
+Marcos: Sofía, ahora mismo mi mayor preocupación es que Laura acaba de pedir un sistema de notificaciones por email como si fuera comprar pan.
+Roberto: Quedan cinco minutos. Resumiendo: sistema de tickets, tres columnas (o cuatro, ya veremos), emails, dashboard de métricas y que sea "bonito". En tres semanas estamos en producción.
+
+[09:30]
+Laura: ¡Perfecto! Sabía que nos entenderíamos.
+Marcos: Yo no he dicho que...
+Roberto: (Interrumpiendo) Gracias a todos. Marcos, luego me pasas el plan de trabajo detallado por días. Sofía, dale apoyo en lo que necesite. ¡A por ello!
+Laura: Ay, una última cosa... ¿podría tener un modo oscuro? Es que está muy de moda.
+Marcos: (Se oye el sonido de un micrófono desconectándose bruscamente).
+
+ACUERDOS DE LA REUNIÓN:
+
+El sistema debe ser "fácil de usar" y con una estética moderna tipo Apple.
+
+Se implementarán las funcionalidades de tickets, comentarios, emails y dashboard en el plazo de 3 semanas.
+
+El equipo técnico definirá los detalles menores (como la concurrencia y los permisos exactos) sobre la marcha para no retrasar el inicio del desarrollo.
