@@ -1,16 +1,29 @@
-import { ChevronRight, SlidersHorizontal, Share2 } from 'lucide-react';
-import KanbanBoard from '@/components/board/KanbanBoard';
-
-const MEMBER_COLORS = [
-  'bg-gradient-to-br from-primary to-primary-dim text-on-primary',
-  'bg-tertiary-container text-on-tertiary-fixed',
-  'bg-error-container text-on-error-container',
-  'bg-surface-container-highest text-inverse-surface',
-];
-
-const MEMBER_INITIALS = ['AL', 'KR', 'TM', 'JD'];
+import { useState } from 'react'
+import { ChevronRight, SlidersHorizontal, Share2, Check } from 'lucide-react'
+import KanbanBoard from '@/components/board/KanbanBoard'
+import BoardFiltersSheet from '@/components/board/BoardFiltersSheet'
+import TicketDetailPanel from '@/components/ticket/TicketDetailPanel'
+import { useUsers } from '@/hooks/useUsers'
+import { useProjects } from '@/hooks/useProjects'
+import { getAvatarColor } from '@/lib/utils'
 
 export default function BoardPage() {
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const { data: users } = useUsers()
+  const { data: projects } = useProjects()
+  const activeProject = projects?.find((p) => p.status === 'active') ?? projects?.[0]
+
+  function handleShare() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  const visibleUsers = Array.isArray(users) ? users.slice(0, 4) : []
+  const extraCount = Array.isArray(users) ? Math.max(0, users.length - 4) : 0
+
   return (
     <div className="flex flex-col h-full">
       {/* Breadcrumb */}
@@ -18,10 +31,14 @@ export default function BoardPage() {
         <span className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant">
           Projects
         </span>
-        <ChevronRight className="w-3 h-3 text-outline-variant" />
-        <span className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant">
-          Alpha
-        </span>
+        {activeProject && (
+          <>
+            <ChevronRight className="w-3 h-3 text-outline-variant" />
+            <span className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant">
+              {activeProject.name}
+            </span>
+          </>
+        )}
       </div>
 
       {/* BoardHeader */}
@@ -33,37 +50,46 @@ export default function BoardPage() {
         <div className="flex items-center gap-3 pb-1">
           {/* AvatarStack */}
           <div className="flex items-center">
-            {MEMBER_INITIALS.map((initials, i) => (
+            {visibleUsers.map((user, i) => (
               <div
-                key={initials}
+                key={user.id}
+                title={user.name}
                 className={[
                   'w-7 h-7 rounded-full flex items-center justify-center',
                   'text-[0.6rem] font-semibold',
                   'ring-2 ring-surface-container-lowest',
-                  MEMBER_COLORS[i],
+                  getAvatarColor(user.id),
                   i > 0 ? '-ml-2' : '',
                 ].join(' ')}
               >
-                {initials}
+                {user.name.slice(0, 2).toUpperCase()}
               </div>
             ))}
-            <div className="w-7 h-7 rounded-full -ml-2 bg-surface-container-high ring-2 ring-surface-container-lowest flex items-center justify-center">
-              <span className="text-[0.6rem] font-semibold text-inverse-surface/60">
-                +4
-              </span>
-            </div>
+            {extraCount > 0 && (
+              <div className="w-7 h-7 rounded-full -ml-2 bg-surface-container-high ring-2 ring-surface-container-lowest flex items-center justify-center">
+                <span className="text-[0.6rem] font-semibold text-inverse-surface/60">
+                  +{extraCount}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Filter */}
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant/20 text-primary text-[0.875rem] bg-transparent hover:bg-primary-container/30 transition-colors">
+          <button
+            onClick={() => setFiltersOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant/20 text-primary text-[0.875rem] bg-transparent hover:bg-primary-container/30 transition-colors"
+          >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             Filter
           </button>
 
           {/* Share */}
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant/20 text-primary text-[0.875rem] bg-transparent hover:bg-primary-container/30 transition-colors">
-            <Share2 className="w-3.5 h-3.5" />
-            Share
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant/20 text-primary text-[0.875rem] bg-transparent hover:bg-primary-container/30 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            {copied ? 'Copied!' : 'Share'}
           </button>
         </div>
       </div>
@@ -72,6 +98,9 @@ export default function BoardPage() {
       <div className="flex-1 overflow-auto px-8 pb-8">
         <KanbanBoard />
       </div>
+
+      <TicketDetailPanel />
+      <BoardFiltersSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} />
     </div>
-  );
+  )
 }

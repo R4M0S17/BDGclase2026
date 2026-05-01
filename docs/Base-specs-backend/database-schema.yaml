@@ -1,0 +1,252 @@
+version: "1.0"
+database: postgresql
+orm: drizzle-orm
+dialect: pg
+
+# ─────────────────────────────────────────
+# ENUMS
+# ─────────────────────────────────────────
+enums:
+  ticket_status:
+    values:
+      - todo
+      - in_progress
+      - review
+      - done
+
+  ticket_priority:
+    values:
+      - high
+      - medium
+      - low
+
+  user_role:
+    values:
+      - admin
+      - user
+
+# ─────────────────────────────────────────
+# TABLES
+# ─────────────────────────────────────────
+tables:
+
+  users:
+    description: Usuarios del sistema con rol global.
+    columns:
+      id:
+        type: serial
+        primaryKey: true
+      name:
+        type: varchar(100)
+        notNull: true
+      email:
+        type: varchar(255)
+        notNull: true
+        unique: true
+      role:
+        type: user_role
+        notNull: true
+        default: user
+      oauth_provider:
+        type: varchar(50)
+        notNull: false
+        description: "Proveedor OAuth, ej: 'google', 'microsoft'"
+      oauth_id:
+        type: varchar(255)
+        notNull: false
+        description: "ID del usuario en el proveedor OAuth externo"
+      created_at:
+        type: timestamp
+        notNull: true
+        default: now()
+    indexes:
+      - columns: [email]
+        unique: true
+      - columns: [oauth_provider, oauth_id]
+        unique: true
+
+  tickets:
+    description: Entidad principal. Soft delete via archived_at. Cambios de status/priority generan audit_logs.
+    columns:
+      id:
+        type: serial
+        primaryKey: true
+      title:
+        type: varchar(255)
+        notNull: true
+      description:
+        type: text
+        notNull: false
+      status:
+        type: ticket_status
+        notNull: true
+        default: todo
+      priority:
+        type: ticket_priority
+        notNull: true
+      created_by:
+        type: integer
+        notNull: true
+        references:
+          table: users
+          column: id
+      archived_at:
+        type: timestamp
+        notNull: false
+        description: "null = activo; valor = archivado (soft delete)"
+      created_at:
+        type: timestamp
+        notNull: true
+        default: now()
+      updated_at:
+        type: timestamp
+        notNull: true
+        default: now()
+      version:
+        type: integer
+        notNull: true
+        default: 1
+        description: "Optimistic locking — se incrementa en cada UPDATE"
+    indexes:
+      - columns: [status]
+      - columns: [priority]
+      - columns: [created_by]
+      - columns: [archived_at]
+
+  tags:
+    description: Catálogo global de etiquetas. Cualquier usuario puede crear tags. Nombres únicos.
+    columns:
+      id:
+        type: serial
+        primaryKey: true
+      name:
+        type: varchar(50)
+        notNull: true
+        unique: true
+      created_by:
+        type: integer
+        notNull: true
+        references:
+          table: users
+          column: id
+      created_at:
+        type: timestamp
+        notNull: true
+        default: now()
+    indexes: []  # unique: true en la columna ya crea el índice
+
+  ticket_assignees:
+    description: Relación N:M entre tickets y usuarios asignados. Solo admin puede insertar/eliminar filas.
+    columns:
+      ticket_id:
+        type: integer
+        notNull: true
+        references:
+          table: tickets
+          column: id
+          onDelete: cascade
+      user_id:
+        type: integer
+        notNull: true
+        references:
+          table: users
+          column: id
+          onDelete: cascade
+    primaryKey: [ticket_id, user_id]
+    indexes:
+      - columns: [user_id]
+
+  ticket_tags:
+    description: Relación N:M entre tickets y tags.
+    columns:
+      ticket_id:
+        type: integer
+        notNull: true
+        references:
+          table: tickets
+          column: id
+          onDelete: cascade
+      tag_id:
+        type: integer
+        notNull: true
+        references:
+          table: tags
+          column: id
+          onDelete: cascade
+    primaryKey: [ticket_id, tag_id]
+
+  comments:
+    description: Comentarios de tickets. Soft delete via deleted_at. Solo asignados o admin pueden comentar.
+    columns:
+      id:
+        type: serial
+        primaryKey: true
+      ticket_id:
+        type: integer
+        notNull: true
+        references:
+          table: tickets
+          column: id
+          onDelete: cascade
+      user_id:
+        type: integer
+        notNull: true
+        references:
+          table: users
+          column: id
+      body:
+        type: text
+        notNull: true
+      created_at:
+        type: timestamp
+        notNull: true
+        default: now()
+      deleted_at:
+        type: timestamp
+        notNull: false
+        description: "null = activo; valor = eliminado (soft delete)"
+    indexes:
+      - columns: [ticket_id]
+
+  audit_logs:
+    description: >
+      Registro inmutable de cambios en tickets (status, priority).
+      Nunca se emiten UPDATE ni DELETE sobre esta tabla.
+    columns:
+      id:
+        type: serial
+        primaryKey: true
+      ticket_id:
+        type: integer
+        notNull: true
+        references:
+          table: tickets
+          column: id
+      field:
+        type: varchar(50)
+        notNull: true
+        description: "Nombre del campo modificado, ej: 'status', 'priority'"
+      old_value:
+        type: text
+        notNull: false
+        description: "Valor antes del cambio"
+      new_value:
+        type: text
+        notNull: false
+        description: "Valor después del cambio"
+      actor_id:
+        type: integer
+        notNull: true
+        references:
+          table: users
+          column: id
+      created_at:
+        type: timestamp
+        notNull: true
+        default: now()
+    immutable: true
+    indexes:
+      - columns: [ticket_id]
+      - columns: [ticket_id, field]
+      - columns: [actor_id]
+      - columns: [created_at]

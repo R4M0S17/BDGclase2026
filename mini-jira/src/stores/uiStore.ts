@@ -27,6 +27,9 @@ interface UIStore {
   activeTicketId: string | null
   setActiveTicketId: (id: string | null) => void
 
+  createTicketOpen: boolean
+  setCreateTicketOpen: (open: boolean) => void
+
   dashboardFilters: DashboardFilters
   setDashboardFilters: (filters: Partial<DashboardFilters>) => void
 
@@ -45,6 +48,9 @@ export const useUIStore = create<UIStore>((set) => ({
 
   activeTicketId: null,
   setActiveTicketId: (id) => set({ activeTicketId: id }),
+
+  createTicketOpen: false,
+  setCreateTicketOpen: (open) => set({ createTicketOpen: open }),
 
   dashboardFilters: getDefaultDashboardFilters(),
   setDashboardFilters: (filters) =>

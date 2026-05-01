@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-All commands run from `mini-jira/`:
+**Frontend** — run from `mini-jira/`:
 
 ```bash
 npm run dev       # Vite dev server
@@ -17,9 +17,78 @@ npm run preview   # Preview production build
 
 No test runner is configured yet. Path alias `@` → `src/` (configured in `vite.config.ts` and `tsconfig.app.json`).
 
+**Backend** — run from the repo root:
+
+```bash
+npm run dev          # tsx watch src/index.ts  (hot-reload, port 3000)
+npm run build        # tsc  →  dist/
+npm run start        # node dist/index.js  (production)
+npm run db:generate  # drizzle-kit generate  (after schema changes)
+npm run db:migrate   # drizzle-kit migrate   (apply migrations)
+```
+
+Requires a `.env` file at root — copy `.env.example`. Required vars: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV`, `PORT`.
+
 ---
 
-## Stack
+## Backend
+
+### Stack
+
+| Capa | Tecnología |
+|---|---|
+| Runtime | Node.js + TypeScript (`NodeNext` modules) |
+| Framework | Express 4 |
+| ORM | Drizzle ORM (`drizzle-orm/node-postgres`) |
+| Base de datos | PostgreSQL (via `pg` Pool) |
+| Auth | JWT — payload `{ userId, role }` |
+| Validación | Zod |
+
+### Arquitectura
+
+Entry point: `src/index.ts` → `src/app.ts`. El app monta los routers:
+
+```
+/auth                        → src/routes/auth.ts
+/tickets                     → src/routes/tickets.ts
+/tickets/:ticketId/comments  → src/routes/comments.ts   (mergeParams: true)
+/tickets/:ticketId/audit     → src/routes/audit.ts
+/tags                        → src/routes/tags.ts
+/users                       → src/routes/users.ts
+```
+
+`errorHandler` (último middleware) lee `err.status` y responde `{ error: message }`. Para lanzar errores con código HTTP: `throw Object.assign(new Error('Not found'), { status: 404 })`.
+
+`req.user` está tipado en `src/types/express.d.ts` como `{ userId: number; role: 'admin' | 'user' }`.
+
+### DB
+
+`src/db/index.ts` exporta `db` (instancia Drizzle) conectada via `DATABASE_URL`.
+
+Esquema canónico: **`src/db/schema.ts`** (archivo único, referenciado por `drizzle.config.ts` y `db/index.ts`).
+
+### Auth — Dev Bypass
+
+`src/middleware/auth.ts` exporta `authenticate` y `requireAdmin` (actualmente stubs sin implementación).
+
+Spec: enviar `X-Dev-Role: admin` o `X-Dev-Role: user` omite validación JWT e inyecta el rol. Solo activo cuando `NODE_ENV=development`.
+
+### Estado de implementación
+
+Todos los routers en `src/routes/` son stubs vacíos — los handlers necesitan implementarse. Los comentarios en cada archivo listan los endpoints esperados.
+
+### Reglas de negocio clave
+
+- **Soft delete universal:** nunca ejecutar `DELETE` en `tickets` ni `comments`; setear `archived_at` / `deleted_at`.
+- **`audit_logs` es inmutable:** solo `INSERT`. Registrar todo cambio de `status` o `priority`.
+- **Permisos:** `user` solo edita tickets en los que está en `ticket_assignees`; `admin` edita cualquiera. Solo `admin` archiva tickets o gestiona asignados.
+- **`GET /tickets`:** filtra `archived_at IS NULL` por defecto; paginación obligatoria (default `limit=20`, max `100`).
+
+---
+
+## Frontend (mini-jira/)
+
+### Stack
 
 | Capa | Tecnología |
 |---|---|
@@ -32,11 +101,9 @@ No test runner is configured yet. Path alias `@` → `src/` (configured in `vite
 | Componentes base | shadcn/ui |
 | Fuente | Inter Variable (única fuente permitida) |
 
----
+### Arquitectura
 
-## Arquitectura
-
-### Rutas
+#### Rutas
 
 ```
 /login          → AuthLayout > LoginPage
@@ -47,7 +114,7 @@ No test runner is configured yet. Path alias `@` → `src/` (configured in `vite
 
 `ProtectedRoute` lee `accessToken` de `useUIStore`. Si es `null`, redirige a `/login`.
 
-### Auth — Dev Bypass
+#### Auth — Dev Bypass
 
 `src/lib/auth/oauthRedirect.ts` → `redirectToOAuth()` simula OAuth sin backend:
 ```ts
@@ -58,12 +125,12 @@ No navega directamente: `LoginPage` tiene un `useEffect` que detecta `accessToke
 
 `authHelpers.ts` — lee/escribe `accessToken` directamente desde `useUIStore.getState()` (fuera de React), no usa el hook.
 
-### HTTP Client — axiosInstance
+#### HTTP Client — axiosInstance
 
 Interceptor de request: adjunta `Bearer <token>` desde el store.
 Interceptor de response: en 401, intenta refresh via `POST /api/auth/refresh` (httpOnly cookie). Si el refresh falla → `clearAccessToken()` + redirect a `/login`. Implementa deduplicación: múltiples requests en vuelo comparten un único refresh con `refreshQueue`.
 
-### Zustand — useUIStore
+#### Zustand — useUIStore
 
 ```ts
 boardFilters: BoardFilters       // filtros activos del tablero
@@ -75,7 +142,7 @@ currentUser: { id, name, role } | null
 accessToken: string | null
 ```
 
-### Board — Árbol de componentes
+#### Board — Árbol de componentes
 
 ```
 KanbanBoard (src/components/board/KanbanBoard.tsx)
@@ -93,7 +160,7 @@ KanbanBoard (src/components/board/KanbanBoard.tsx)
 
 **`canEdit`:** `currentUserRole === 'admin' || currentUserId === ticket.createdBy.id`
 
-### Bug crítico resuelto: useOptimistic + StrictMode
+#### Bug crítico resuelto: useOptimistic + StrictMode
 
 `KanbanBoard` se divide en dos componentes dentro del **mismo archivo** a propósito.
 
@@ -105,7 +172,7 @@ KanbanBoard (src/components/board/KanbanBoard.tsx)
 
 **Por qué `|| !data` además de `isLoading`:** si la query falla, `isLoading = false` pero `data = undefined`. Sin el guard `!data`, el board intentaría renderizar en estado de error.
 
-### Optimistic Updates — React 19
+#### Optimistic Updates — React 19
 
 `handleMoveCard` en `KanbanBoardBody`:
 1. `updateOptimistic({ id, status })` — UI cambia instantáneamente
@@ -115,7 +182,7 @@ KanbanBoard (src/components/board/KanbanBoard.tsx)
 
 `moveTicketStatus` es una función async (no hook) en `src/hooks/useTickets.ts`.
 
-### Drag & Drop — API nativa HTML5
+#### Drag & Drop — API nativa HTML5
 
 Sin librerías. Responsabilidades:
 - `TicketCard.tsx` — `draggable={canEdit}` + `onDragStart` / `onDragEnd`
@@ -124,7 +191,7 @@ Sin librerías. Responsabilidades:
 
 Highlight de drop target: `bg-surface-container-high` cuando `isDragOver && draggingTicketId`.
 
-### Endpoints
+#### Endpoints
 
 ```ts
 GET    /api/tickets              → lista con filtros
@@ -134,7 +201,7 @@ DELETE /api/tickets/:id          → archivar
 
 Todos los URLs están centralizados en `src/lib/api/endpoints.ts` como `API.*`.
 
-### Tipos clave
+#### Tipos clave
 
 ```ts
 type TicketStatus = 'todo' | 'in_progress' | 'review' | 'done'
@@ -150,7 +217,7 @@ type Role         = 'admin' | 'member'
 
 ## Sistema de Diseño — "Lucid Efficiency"
 
-Fuente de verdad: `stitch_mini_jira_kanban_dashboard/DESIGN.md`
+Fuente de verdad: `docs/stitch_mini_jira_kanban_dashboard/DESIGN.md`
 
 ### Paleta de Colores — REGLA ABSOLUTA
 
@@ -210,7 +277,7 @@ Fuente de verdad: `stitch_mini_jira_kanban_dashboard/DESIGN.md`
 
 - **Sin comentarios** salvo WHY no obvio (restricción oculta, workaround específico).
 - **Sin abstracciones prematuras.** Tres líneas similares no justifican un helper.
-- **Sin features extra** fuera del backlog (`backlog.md`).
+- **Sin features extra** fuera del backlog (`docs/backlog.md`).
 - **Preferir editar archivos existentes** antes de crear nuevos.
 - **Sin `#000000`.** Siempre `inverse-surface` (`#0c0e10`).
 - **Sin drop shadows estándar.** Solo Air Shadow.

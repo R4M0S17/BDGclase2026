@@ -5,24 +5,28 @@ import {
   LayoutGrid,
   BarChart2,
   AlertCircle,
-  Settings,
+  FolderOpen,
   HelpCircle,
   Plus,
+  LogOut,
 } from 'lucide-react'
 import { apiClient } from '@/lib/api/axiosInstance'
 import { clearAccessToken } from '@/lib/auth/authHelpers'
 import { API } from '@/lib/api/endpoints'
+import { useUIStore } from '@/stores/uiStore'
 
 const NAV_ITEMS = [
+  { to: '/projects', label: 'Projects', Icon: FolderOpen },
   { to: '/roadmap', label: 'Roadmap', Icon: TrendingUp },
   { to: '/backlog', label: 'Backlog', Icon: List },
   { to: '/board', label: 'Board', Icon: LayoutGrid },
-  { to: '/reports', label: 'Reports', Icon: BarChart2 },
+  { to: '/dashboard', label: 'Dashboard', Icon: BarChart2 },
   { to: '/issues', label: 'Issues', Icon: AlertCircle },
 ]
 
 export default function Sidebar() {
   const navigate = useNavigate()
+  const setCreateTicketOpen = useUIStore((s) => s.setCreateTicketOpen)
 
   async function handleLogout() {
     try {
@@ -81,19 +85,25 @@ export default function Sidebar() {
 
       {/* Bottom */}
       <div className="px-3 pb-5 flex flex-col gap-0.5">
+        <a
+          href="mailto:soporte@empresa.com"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-[0.875rem] text-inverse-surface/60 hover:bg-surface-container-high/60 hover:text-inverse-surface transition-colors"
+        >
+          <HelpCircle className="w-4 h-4 shrink-0" />
+          Support
+        </a>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 rounded-md text-[0.875rem] text-inverse-surface/60 hover:bg-surface-container-high/60 hover:text-inverse-surface transition-colors w-full text-left"
         >
-          <Settings className="w-4 h-4 shrink-0" />
-          Settings
-        </button>
-        <button className="flex items-center gap-3 px-3 py-2 rounded-md text-[0.875rem] text-inverse-surface/60 hover:bg-surface-container-high/60 hover:text-inverse-surface transition-colors w-full text-left">
-          <HelpCircle className="w-4 h-4 shrink-0" />
-          Support
+          <LogOut className="w-4 h-4 shrink-0" />
+          Log out
         </button>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-gradient-to-br from-primary to-primary-dim text-on-primary text-[0.875rem] font-medium shadow-[0px_12px_32px_rgba(12,14,16,0.04)] hover:opacity-90 transition-opacity">
+        <button
+          onClick={() => setCreateTicketOpen(true)}
+          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-gradient-to-br from-primary to-primary-dim text-on-primary text-[0.875rem] font-medium shadow-[0px_12px_32px_rgba(12,14,16,0.04)] hover:opacity-90 transition-opacity"
+        >
           <Plus className="w-4 h-4" />
           Create Issue
         </button>

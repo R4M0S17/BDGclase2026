@@ -24,3 +24,14 @@ export const newTicketSchema = ticketSchema.pick({
 })
 
 export type NewTicketFormValues = z.infer<typeof newTicketSchema>
+
+export const editTicketSchema = ticketSchema.pick({
+  title: true,
+  description: true,
+  priority: true,
+  isBlocked: true,
+  assigneeIds: true,
+  labels: true,
+})
+
+export type EditTicketFormValues = z.infer<typeof editTicketSchema>

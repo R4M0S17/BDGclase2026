@@ -1,5 +1,6 @@
 import { MessageSquare, Link2 } from 'lucide-react'
 import { getAvatarColor } from '@/lib/utils'
+import { useUIStore } from '@/stores/uiStore'
 import type { Priority, Ticket } from '@/types'
 import StatusBadge from './StatusBadge'
 
@@ -35,17 +36,19 @@ export default function TaskCard({ ticket, canEdit, onDragStart, onDragEnd }: Ta
   const topBadge = resolveTopBadge(ticket)
   const bottomBadge = { variant: PRIORITY_VARIANT[ticket.priority], label: PRIORITY_LABEL[ticket.priority] }
   const primaryAssignee = ticket.assignees[0]
+  const setActiveTicketId = useUIStore((s) => s.setActiveTicketId)
 
   return (
     <div
       draggable={canEdit}
       onDragStart={canEdit ? onDragStart : undefined}
       onDragEnd={canEdit ? onDragEnd : undefined}
+      onClick={() => setActiveTicketId(ticket.id)}
       className={[
         'bg-surface-container-lowest rounded-lg px-4 pt-4 pb-3',
         'shadow-[0px_12px_32px_rgba(12,14,16,0.04)]',
         ticket.isBlocked ? 'border-l-4 border-error-container' : '',
-        canEdit ? 'cursor-grab active:cursor-grabbing active:opacity-50' : '',
+        canEdit ? 'cursor-grab active:cursor-grabbing active:opacity-50' : 'cursor-pointer',
       ].join(' ')}
     >
       <div className="flex items-center justify-between gap-2 mb-2.5">

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/lib/auth/authHelpers'
+import { useUIStore } from '@/stores/uiStore'
 import { API } from './endpoints'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
@@ -13,6 +14,10 @@ apiClient.interceptors.request.use((config) => {
   const token = getAccessToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  if (import.meta.env.DEV) {
+    const role = useUIStore.getState().currentUser?.role
+    config.headers['X-Dev-Role'] = role === 'admin' ? 'admin' : 'user'
   }
   return config
 })

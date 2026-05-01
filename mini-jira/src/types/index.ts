@@ -1,4 +1,18 @@
-export type Role = 'admin' | 'member'
+export type Role = 'admin' | 'user'
+
+export type ProjectStatus = 'active' | 'archived'
+
+export interface Project {
+  id: string
+  name: string
+  description?: string
+  slug: string
+  status: ProjectStatus
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+  archivedAt?: string
+}
 
 export type Priority = 'Low' | 'Medium' | 'High'
 

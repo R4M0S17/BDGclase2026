@@ -1,4 +1,11 @@
 export const API = {
+  projects: {
+    list:    '/api/projects',
+    create:  '/api/projects',
+    detail:  (id: string) => `/api/projects/${id}`,
+    update:  (id: string) => `/api/projects/${id}`,
+    archive: (id: string) => `/api/projects/${id}`,
+  },
   auth: {
     google: '/api/auth/google',
     refresh: '/api/auth/refresh',
