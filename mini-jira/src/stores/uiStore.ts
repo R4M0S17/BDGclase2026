@@ -14,7 +14,7 @@ const DEFAULT_BOARD_FILTERS: BoardFilters = {
   status: [],
   priority: [],
   assigneeId: null,
-  label: null,
+  tagId: null,
   dateFrom: null,
   dateTo: null,
 }

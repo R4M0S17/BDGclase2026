@@ -18,7 +18,6 @@ function getInitials(name: string): string {
 export default function UserAvatar({ user, className }: Props) {
   return (
     <Avatar className={className ?? 'h-6 w-6'}>
-      {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
       <AvatarFallback className="text-xs">{getInitials(user.name)}</AvatarFallback>
     </Avatar>
   )

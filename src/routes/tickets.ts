@@ -2,18 +2,23 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
 import { and, count, eq, inArray, isNotNull, isNull, type SQL } from 'drizzle-orm'
 import { db } from '../db/index.js'
-import { auditLogs, ticketAssignees, ticketTags, tickets } from '../db/schema.js'
+import { auditLogs, ticketAssignees, ticketTags, tickets, tags } from '../db/schema.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 
 const router = Router()
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
+const ticketStatusEnum = z.enum(['todo', 'in_progress', 'review', 'done'])
+const ticketPriorityEnum = z.enum(['high', 'medium', 'low'])
+
+// Express/qs parses status[]=todo as req.query.status = ['todo'] (strips brackets)
 const listQuerySchema = z.object({
-  status: z.enum(['todo', 'in_progress', 'review', 'done']).optional(),
-  priority: z.enum(['high', 'medium', 'low']).optional(),
+  status: z.union([ticketStatusEnum, z.array(ticketStatusEnum)]).optional().transform((v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v])),
+  priority: z.union([ticketPriorityEnum, z.array(ticketPriorityEnum)]).optional().transform((v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v])),
   tagId: z.coerce.number().int().positive().optional(),
   assigneeId: z.coerce.number().int().positive().optional(),
+  projectId: z.coerce.number().int().positive().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   archived: z.enum(['true', 'false']).optional(),
@@ -25,6 +30,7 @@ const createBodySchema = z.object({
   priority: z.enum(['high', 'medium', 'low']),
   status: z.enum(['todo', 'in_progress', 'review', 'done']).default('todo'),
   isBlocked: z.boolean().optional(),
+  projectId: z.number().int().positive().optional(),
   tagIds: z.array(z.number().int().positive()).optional(),
 })
 
@@ -33,8 +39,10 @@ const updateBodySchema = z.object({
   description: z.string().optional(),
   priority: z.enum(['high', 'medium', 'low']).optional(),
   isBlocked: z.boolean().optional(),
+  tagIds: z.array(z.number().int().positive()).optional(),
+  version: z.number().int().positive(),
 }).refine(
-  (d) => d.title !== undefined || d.description !== undefined || d.priority !== undefined || d.isBlocked !== undefined,
+  (d) => d.title !== undefined || d.description !== undefined || d.priority !== undefined || d.isBlocked !== undefined || d.tagIds !== undefined,
   { message: 'At least one field must be provided' },
 )
 
@@ -81,14 +89,15 @@ router.get('/', authenticate, async (req: Request, res: Response, next: NextFunc
       return
     }
 
-    const { status, priority, tagId, assigneeId, page, limit, archived } = parsed.data
+    const { status: statusFilter, priority: priorityFilter, tagId, assigneeId, projectId, page, limit, archived } = parsed.data
 
     const conditions: (SQL | undefined)[] = [
       archived === 'true' ? isNotNull(tickets.archivedAt) : isNull(tickets.archivedAt),
     ]
 
-    if (status)     conditions.push(eq(tickets.status, status))
-    if (priority)   conditions.push(eq(tickets.priority, priority))
+    if (statusFilter?.length)   conditions.push(inArray(tickets.status, statusFilter))
+    if (priorityFilter?.length) conditions.push(inArray(tickets.priority, priorityFilter))
+    if (projectId)  conditions.push(eq(tickets.projectId, projectId))
     if (tagId)      conditions.push(inArray(tickets.id, db.select({ id: ticketTags.ticketId }).from(ticketTags).where(eq(ticketTags.tagId, tagId))))
     if (assigneeId) conditions.push(inArray(tickets.id, db.select({ id: ticketAssignees.ticketId }).from(ticketAssignees).where(eq(ticketAssignees.userId, assigneeId))))
 
@@ -119,12 +128,12 @@ router.post('/', authenticate, async (req: Request, res: Response, next: NextFun
       return
     }
 
-    const { title, description, priority, status, isBlocked, tagIds } = parsed.data
+    const { title, description, priority, status, isBlocked, projectId, tagIds } = parsed.data
     const createdBy = req.user!.userId
 
     const [ticket] = await db
       .insert(tickets)
-      .values({ title, description, priority, status, isBlocked: isBlocked ?? false, createdBy })
+      .values({ title, description, priority, status, isBlocked: isBlocked ?? false, projectId, createdBy })
       .returning()
 
     if (tagIds?.length) {
@@ -218,25 +227,53 @@ router.patch('/:id', authenticate, async (req: Request, res: Response, next: Nex
     if (ticket.archivedAt) throw Object.assign(new Error('Ticket is archived'), { status: 422 })
     await assertCanEdit(userId, id, role)
 
-    const set: Partial<typeof tickets.$inferInsert> & { updatedAt: Date } = { updatedAt: new Date() }
-    if (parsed.data.title !== undefined)       set.title = parsed.data.title
-    if (parsed.data.description !== undefined) set.description = parsed.data.description
-    if (parsed.data.priority !== undefined)    set.priority = parsed.data.priority
-    if (parsed.data.isBlocked !== undefined)   set.isBlocked = parsed.data.isBlocked
+    const { version, tagIds, ...fields } = parsed.data
 
-    const [updated] = await db.update(tickets).set(set).where(eq(tickets.id, id)).returning()
+    const set: Partial<typeof tickets.$inferInsert> & { updatedAt: Date; version: number } = {
+      updatedAt: new Date(),
+      version: version + 1,
+    }
+    if (fields.title !== undefined)       set.title = fields.title
+    if (fields.description !== undefined) set.description = fields.description
+    if (fields.priority !== undefined)    set.priority = fields.priority
+    if (fields.isBlocked !== undefined)   set.isBlocked = fields.isBlocked
 
-    if (parsed.data.priority && parsed.data.priority !== ticket.priority) {
+    const [updated] = await db
+      .update(tickets)
+      .set(set)
+      .where(and(eq(tickets.id, id), eq(tickets.version, version)))
+      .returning()
+
+    if (!updated) {
+      res.status(409).json({ error: 'Conflict: ticket was modified by another user' })
+      return
+    }
+
+    if (fields.priority && fields.priority !== ticket.priority) {
       await db.insert(auditLogs).values({
         ticketId: id,
         field: 'priority',
         oldValue: ticket.priority,
-        newValue: parsed.data.priority,
+        newValue: fields.priority,
         actorId: userId,
       })
     }
 
-    res.json(updated)
+    if (tagIds !== undefined) {
+      await db.delete(ticketTags).where(eq(ticketTags.ticketId, id))
+      if (tagIds.length > 0) {
+        const validTags = await db.select({ id: tags.id }).from(tags).where(and(inArray(tags.id, tagIds), isNull(tags.deletedAt)))
+        if (validTags.length > 0) {
+          await db.insert(ticketTags).values(validTags.map((t) => ({ ticketId: id, tagId: t.id })))
+        }
+      }
+    }
+
+    const [tagRows] = await Promise.all([
+      db.select().from(ticketTags).where(eq(ticketTags.ticketId, id)),
+    ])
+
+    res.json({ ...updated, tagIds: tagRows.map((r) => r.tagId) })
   } catch (err) {
     next(err)
   }

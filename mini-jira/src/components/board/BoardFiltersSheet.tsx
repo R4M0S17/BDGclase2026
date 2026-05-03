@@ -1,6 +1,7 @@
 import { X, RotateCcw } from 'lucide-react'
 import { useUIStore } from '@/stores/uiStore'
 import { useUsers } from '@/hooks/useUsers'
+import { useTags } from '@/hooks/useTags'
 import type { Priority, TicketStatus } from '@/types'
 
 const PRIORITIES: Priority[] = ['High', 'Medium', 'Low']
@@ -22,6 +23,7 @@ export default function BoardFiltersSheet({ open, onClose }: Props) {
   const setBoardFilters = useUIStore((s) => s.setBoardFilters)
   const resetBoardFilters = useUIStore((s) => s.resetBoardFilters)
   const { data: users } = useUsers()
+  const { data: tags } = useTags()
 
   if (!open) return null
 
@@ -124,19 +126,28 @@ export default function BoardFiltersSheet({ open, onClose }: Props) {
             </select>
           </div>
 
-          {/* Label */}
-          <div>
-            <p className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant mb-3">
-              Label
-            </p>
-            <input
-              type="text"
-              value={boardFilters.label ?? ''}
-              onChange={(e) => setBoardFilters({ label: e.target.value || null })}
-              placeholder="e.g. backend, urgent"
-              className="w-full px-3 py-2 text-[0.875rem] bg-surface-container-low rounded-md text-inverse-surface placeholder:text-outline-variant outline-none focus:ring-1 focus:ring-primary/30"
-            />
-          </div>
+          {/* Tag */}
+          {tags && tags.length > 0 && (
+            <div>
+              <p className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant mb-3">
+                Tag
+              </p>
+              <select
+                value={boardFilters.tagId ?? ''}
+                onChange={(e) =>
+                  setBoardFilters({ tagId: e.target.value ? Number(e.target.value) : null })
+                }
+                className="w-full px-3 py-2 text-[0.875rem] bg-surface-container-low rounded-md text-inverse-surface outline-none focus:ring-1 focus:ring-primary/30"
+              >
+                <option value="">All tags</option>
+                {tags.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date range */}
           <div>

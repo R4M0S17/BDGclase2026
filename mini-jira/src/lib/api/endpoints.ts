@@ -5,6 +5,7 @@ export const API = {
     detail:  (id: string) => `/api/projects/${id}`,
     update:  (id: string) => `/api/projects/${id}`,
     archive: (id: string) => `/api/projects/${id}`,
+    tickets: (id: string) => `/api/projects/${id}/tickets`,
   },
   auth: {
     google: '/api/auth/google',
@@ -30,5 +31,8 @@ export const API = {
   metrics: {
     dashboard: '/api/metrics',
     export: '/api/metrics/export',
+  },
+  tags: {
+    list: '/api/tags',
   },
 } as const

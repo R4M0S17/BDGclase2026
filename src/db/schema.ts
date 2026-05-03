@@ -56,6 +56,7 @@ export const tickets = pgTable('tickets', {
   priority:    ticketPriorityEnum('priority').notNull(),
   isBlocked:   boolean('is_blocked').notNull().default(false),
   version:     integer('version').notNull().default(1),
+  projectId:   integer('project_id').references(() => projects.id, { onDelete: 'set null' }),
   createdBy:   integer('created_by').notNull().references(() => users.id),
   archivedAt:  timestamp('archived_at', { withTimezone: true }),
   createdAt:   timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -65,6 +66,7 @@ export const tickets = pgTable('tickets', {
   priorityIdx:  index('tickets_priority_idx').on(t.priority),
   createdByIdx: index('tickets_created_by_idx').on(t.createdBy),
   archivedIdx:  index('tickets_archived_at_idx').on(t.archivedAt),
+  projectIdx:   index('tickets_project_id_idx').on(t.projectId),
 }))
 
 export const tags = pgTable('tags', {
@@ -72,6 +74,7 @@ export const tags = pgTable('tags', {
   name:      varchar('name', { length: 50 }).notNull().unique(),
   createdBy: integer('created_by').notNull().references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 })
 
 export const ticketAssignees = pgTable('ticket_assignees', {

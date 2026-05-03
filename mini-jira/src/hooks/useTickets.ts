@@ -7,10 +7,10 @@ import type { EditTicketFormValues, NewTicketFormValues } from '@/lib/validators
 
 function toApiParams(filters: BoardFilters): Record<string, unknown> {
   const params: Record<string, unknown> = {}
-  if (filters.priority.length) params['priority[]'] = filters.priority.map((p) => p.toLowerCase())
-  if (filters.status.length) params['status[]'] = filters.status
+  if (filters.priority.length) params.priority = filters.priority.map((p) => p.toLowerCase())
+  if (filters.status.length) params.status = filters.status
   if (filters.assigneeId) params.assigneeId = filters.assigneeId
-  if (filters.label) params.label = filters.label
+  if (filters.tagId) params.tagId = filters.tagId
   if (filters.dateFrom) params.dateFrom = filters.dateFrom
   if (filters.dateTo) params.dateTo = filters.dateTo
   return params
@@ -36,10 +36,19 @@ export function useCreateTicket() {
 export function useUpdateTicket(ticketId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: EditTicketFormValues) =>
-      apiClient.patch<Ticket>(API.tickets.update(ticketId), data).then((r) => r.data),
-    onSuccess: (updated) => {
-      queryClient.setQueryData<Ticket>(['ticket', ticketId], updated)
+    mutationFn: (data: EditTicketFormValues) => {
+      const body: Record<string, unknown> = {
+        title: data.title,
+        description: data.description,
+        priority: data.priority.toLowerCase(),
+        isBlocked: data.isBlocked,
+        version: data.version,
+      }
+      if (data.tagIds !== undefined) body.tagIds = data.tagIds
+      return apiClient.patch(API.tickets.update(ticketId), body).then((r) => r.data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
       queryClient.invalidateQueries({ queryKey: ['tickets'] })
     },
   })
@@ -50,9 +59,6 @@ export async function moveTicketStatus(
   newStatus: TicketStatus,
   version: number,
 ): Promise<Ticket> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 1500))
-  // 30% failure rate to make rollback observable in demo
-  if (Math.random() < 0.3) throw new Error('Simulated conflict: version mismatch')
   const r = await apiClient.patch<Ticket>(API.tickets.updateStatus(ticketId), {
     status: newStatus,
     version,

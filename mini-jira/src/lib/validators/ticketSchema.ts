@@ -30,8 +30,9 @@ export const editTicketSchema = ticketSchema.pick({
   description: true,
   priority: true,
   isBlocked: true,
-  assigneeIds: true,
-  labels: true,
+}).extend({
+  version: z.number().int(),
+  tagIds: z.array(z.number()).optional(),
 })
 
 export type EditTicketFormValues = z.infer<typeof editTicketSchema>

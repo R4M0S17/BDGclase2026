@@ -69,13 +69,25 @@ Esquema canónico: **`src/db/schema.ts`** (archivo único, referenciado por `dri
 
 ### Auth — Dev Bypass
 
-`src/middleware/auth.ts` exporta `authenticate` y `requireAdmin` (actualmente stubs sin implementación).
+`src/middleware/auth.ts` exporta `authenticate` y `requireAdmin`, **ambos completamente implementados**.
 
-Spec: enviar `X-Dev-Role: admin` o `X-Dev-Role: user` omite validación JWT e inyecta el rol. Solo activo cuando `NODE_ENV=development`.
+- `authenticate`: lee JWT del header `Authorization: Bearer <token>`, verifica con `JWT_SECRET`, inyecta `req.user = { userId, role }`. En `NODE_ENV=development`, el header `X-Dev-Role: admin|user` omite la validación JWT.
+- `requireAdmin`: rechaza con 403 si `req.user.role !== 'admin'`.
 
 ### Estado de implementación
 
-Todos los routers en `src/routes/` son stubs vacíos — los handlers necesitan implementarse. Los comentarios en cada archivo listan los endpoints esperados.
+Todos los routers en `src/routes/` están completamente implementados:
+
+| Router | Endpoints |
+|---|---|
+| `auth.ts` | OAuth callback, dev-token, refresh |
+| `tickets.ts` | CRUD completo + assignees + status (OL) |
+| `projects.ts` | CRUD + soft delete + `GET /:id/tickets` |
+| `comments.ts` | CRUD + soft delete |
+| `tags.ts` | CRUD + soft delete |
+| `users.ts` | GET me, list, detail, PATCH role |
+| `audit.ts` | GET logs por ticket |
+| `metrics.ts` | Dashboard + CSV export (stream) |
 
 ### Reglas de negocio clave
 

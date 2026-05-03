@@ -23,7 +23,11 @@ export interface User {
   name: string
   email: string
   role: Role
-  avatarUrl?: string
+}
+
+export interface Tag {
+  id: number
+  name: string
 }
 
 export interface Ticket {
@@ -33,8 +37,11 @@ export interface Ticket {
   status: TicketStatus
   priority: Priority
   isBlocked: boolean
+  projectId?: string | null
   assignees: User[]
+  assigneeIds: number[]
   labels: string[]
+  tagIds: number[]
   createdBy: User
   createdAt: string
   updatedAt: string
@@ -77,7 +84,7 @@ export interface BoardFilters {
   status: TicketStatus[]
   priority: Priority[]
   assigneeId: string | null
-  label: string | null
+  tagId: number | null
   dateFrom: string | null
   dateTo: string | null
 }

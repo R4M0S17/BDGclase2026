@@ -7,6 +7,7 @@ import { useTicketDetail, useArchiveTicket } from '@/hooks/useTicketDetail'
 import { useComments, useAddComment } from '@/hooks/useComments'
 import { useUpdateTicket } from '@/hooks/useTickets'
 import { useUsers } from '@/hooks/useUsers'
+import { useTags } from '@/hooks/useTags'
 import { commentSchema, type CommentFormValues } from '@/lib/validators/commentSchema'
 import { editTicketSchema, type EditTicketFormValues } from '@/lib/validators/ticketSchema'
 import { getAvatarColor } from '@/lib/utils'
@@ -34,11 +35,11 @@ export default function TicketDetailPanel() {
   const setActiveTicketId = useUIStore((s) => s.setActiveTicketId)
   const currentUser = useUIStore((s) => s.currentUser)
   const [editMode, setEditMode] = useState(false)
-  const [labelsInput, setLabelsInput] = useState('')
 
   const { data: ticket, isLoading } = useTicketDetail(activeTicketId)
   const { data: comments } = useComments(activeTicketId ?? '')
   const { data: users } = useUsers()
+  const { data: tags } = useTags()
   const archiveMutation = useArchiveTicket()
   const updateTicket = useUpdateTicket(activeTicketId ?? '')
   const addComment = useAddComment(activeTicketId ?? '')
@@ -72,14 +73,13 @@ export default function TicketDetailPanel() {
 
   function handleOpenEdit() {
     if (!ticket) return
-    setLabelsInput(ticket.labels.join(', '))
     editForm.reset({
       title: ticket.title,
       description: ticket.description ?? '',
       priority: ticket.priority,
       isBlocked: ticket.isBlocked,
-      assigneeIds: ticket.assignees.map((u) => u.id),
-      labels: ticket.labels,
+      tagIds: ticket.tagIds,
+      version: ticket.version,
     })
     setEditMode(true)
   }
@@ -153,43 +153,50 @@ export default function TicketDetailPanel() {
 
             {/* Meta */}
             <div className="px-6 py-4 flex flex-col gap-3 border-t border-b border-outline-variant/10">
-              {ticket.assignees.length > 0 && (
+              {ticket.assigneeIds.length > 0 && (
                 <div className="flex items-start gap-3">
                   <span className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant w-20 shrink-0 pt-0.5">
                     Asignados
                   </span>
                   <div className="flex flex-wrap gap-2">
-                    {ticket.assignees.map((u) => (
-                      <div key={u.id} className="flex items-center gap-1.5">
-                        <div
-                          className={[
-                            'w-5 h-5 rounded-full flex items-center justify-center text-[0.5rem] font-semibold shrink-0',
-                            getAvatarColor(u.id),
-                          ].join(' ')}
-                        >
-                          {u.name.slice(0, 2).toUpperCase()}
+                    {ticket.assigneeIds.map((aid) => {
+                      const u = users?.find((u) => u.id === String(aid))
+                      if (!u) return null
+                      return (
+                        <div key={aid} className="flex items-center gap-1.5">
+                          <div
+                            className={[
+                              'w-5 h-5 rounded-full flex items-center justify-center text-[0.5rem] font-semibold shrink-0',
+                              getAvatarColor(u.id),
+                            ].join(' ')}
+                          >
+                            {u.name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <span className="text-[0.75rem] text-inverse-surface">{u.name}</span>
                         </div>
-                        <span className="text-[0.75rem] text-inverse-surface">{u.name}</span>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
 
-              {ticket.labels.length > 0 && (
+              {ticket.tagIds.length > 0 && (
                 <div className="flex items-start gap-3">
                   <span className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant w-20 shrink-0 pt-0.5">
                     Etiquetas
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {ticket.labels.map((label) => (
-                      <span
-                        key={label}
-                        className="px-2 py-0.5 rounded bg-surface-container-high text-[0.6875rem] text-inverse-surface/70"
-                      >
-                        {label}
-                      </span>
-                    ))}
+                    {ticket.tagIds.map((tid) => {
+                      const tag = tags?.find((t) => t.id === tid)
+                      return (
+                        <span
+                          key={tid}
+                          className="px-2 py-0.5 rounded bg-surface-container-high text-[0.6875rem] text-inverse-surface/70"
+                        >
+                          {tag?.name ?? tid}
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -361,44 +368,35 @@ export default function TicketDetailPanel() {
                 </div>
               </div>
 
-              {/* Labels */}
-              <div>
-                <label className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant block mb-1.5">
-                  Etiquetas
-                </label>
-                <input
-                  type="text"
-                  value={labelsInput}
-                  onChange={(e) => {
-                    setLabelsInput(e.target.value)
-                    editForm.setValue(
-                      'labels',
-                      e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-                    )
-                  }}
-                  placeholder="backend, urgent"
-                  className="w-full px-3 py-2 text-[0.875rem] bg-surface-container-low rounded-md text-inverse-surface placeholder:text-outline-variant outline-none focus:ring-1 focus:ring-primary/30"
-                />
-              </div>
-
-              {/* Assignees */}
-              {Array.isArray(users) && users.length > 0 && (
+              {/* Tags */}
+              {tags && tags.length > 0 && (
                 <div>
                   <label className="text-[0.6875rem] uppercase tracking-[0.05em] text-outline-variant block mb-2">
-                    Asignados
+                    Etiquetas
                   </label>
                   <div className="flex flex-col gap-2 max-h-36 overflow-y-auto">
-                    {users.map((u) => (
-                      <label key={u.id} className="flex items-center gap-2.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          value={u.id}
-                          {...editForm.register('assigneeIds')}
-                          className="w-4 h-4 rounded accent-primary"
-                        />
-                        <span className="text-[0.875rem] text-inverse-surface">{u.name}</span>
-                      </label>
-                    ))}
+                    {tags.map((tag) => {
+                      const checked = (editForm.watch('tagIds') ?? []).includes(tag.id)
+                      return (
+                        <label key={tag.id} className="flex items-center gap-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const current = editForm.getValues('tagIds') ?? []
+                              editForm.setValue(
+                                'tagIds',
+                                e.target.checked
+                                  ? [...current, tag.id]
+                                  : current.filter((id) => id !== tag.id),
+                              )
+                            }}
+                            className="w-4 h-4 rounded accent-primary"
+                          />
+                          <span className="text-[0.875rem] text-inverse-surface">{tag.name}</span>
+                        </label>
+                      )
+                    })}
                   </div>
                 </div>
               )}

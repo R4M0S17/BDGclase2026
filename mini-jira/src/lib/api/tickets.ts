@@ -5,17 +5,21 @@ import { apiClient } from './axiosInstance'
 
 // --- Types as defined in api-contract.md ---
 
-interface ApiTicket {
+export interface ApiTicket {
   id: number
   title: string
   description: string | null
   status: TicketStatus
   priority: 'high' | 'medium' | 'low'
   isBlocked: boolean
+  version: number
+  projectId: number | null
   createdBy: number
   archivedAt: string | null
   createdAt: string
   updatedAt: string
+  assigneeIds?: number[]
+  tagIds?: number[]
 }
 
 interface PaginatedTicketsResponse {
@@ -31,7 +35,7 @@ const PRIORITY_MAP: Record<ApiTicket['priority'], Priority> = {
   low: 'Low',
 }
 
-function mapApiTicket(t: ApiTicket): Ticket {
+export function mapApiTicket(t: ApiTicket): Ticket {
   return {
     id: String(t.id),
     title: t.title,
@@ -39,13 +43,16 @@ function mapApiTicket(t: ApiTicket): Ticket {
     status: t.status,
     priority: PRIORITY_MAP[t.priority],
     isBlocked: t.isBlocked,
+    projectId: t.projectId != null ? String(t.projectId) : null,
     assignees: [],
+    assigneeIds: t.assigneeIds ?? [],
     labels: [],
+    tagIds: t.tagIds ?? [],
     createdBy: { id: String(t.createdBy), name: '—', email: '', role: 'user' },
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
     archivedAt: t.archivedAt ?? undefined,
-    version: 0,
+    version: t.version,
   }
 }
 

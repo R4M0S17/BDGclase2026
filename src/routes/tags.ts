@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
+import { count, eq, isNull } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { tags } from '../db/schema.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
@@ -13,10 +13,23 @@ const createBodySchema = z.object({
 
 // ─── GET /tags ────────────────────────────────────────────────────────────────
 
-router.get('/', authenticate, async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rows = await db.select().from(tags)
-    res.json(rows)
+    const page  = Math.max(1, Number(req.query.page)  || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 100))
+    const offset = (page - 1) * limit
+
+    const where = isNull(tags.deletedAt)
+
+    const [rows, [{ total }]] = await Promise.all([
+      db.select().from(tags).where(where).limit(limit).offset(offset),
+      db.select({ total: count() }).from(tags).where(where),
+    ])
+
+    res.json({
+      data: rows,
+      meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) },
+    })
   } catch (err) {
     next(err)
   }
@@ -73,7 +86,7 @@ router.patch('/:id', authenticate, requireAdmin, async (req: Request, res: Respo
   }
 })
 
-// ─── DELETE /tags/:id  (admin only) ──────────────────────────────────────────
+// ─── DELETE /tags/:id  (soft delete — admin only) ────────────────────────────
 
 router.delete('/:id', authenticate, requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -84,8 +97,9 @@ router.delete('/:id', authenticate, requireAdmin, async (req: Request, res: Resp
     }
 
     const [deleted] = await db
-      .delete(tags)
-      .where(eq(tags.id, id))
+      .update(tags)
+      .set({ deletedAt: new Date() })
+      .where(eq(tags.id, id) && isNull(tags.deletedAt))
       .returning()
 
     if (!deleted) throw Object.assign(new Error('Tag not found'), { status: 404 })

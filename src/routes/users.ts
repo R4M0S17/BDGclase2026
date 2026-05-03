@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { users } from '../db/schema.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
@@ -26,16 +26,23 @@ router.get('/me', authenticate, async (req: Request, res: Response, next: NextFu
 
 // ─── GET /users ───────────────────────────────────────────────────────────────
 
-router.get('/', authenticate, async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rows = await db.select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      role: users.role,
-    }).from(users)
+    const page  = Math.max(1, Number(req.query.page)  || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 100))
+    const offset = (page - 1) * limit
 
-    res.json(rows)
+    const cols = { id: users.id, name: users.name, email: users.email, role: users.role }
+
+    const [rows, [{ total }]] = await Promise.all([
+      db.select(cols).from(users).limit(limit).offset(offset),
+      db.select({ total: count() }).from(users),
+    ])
+
+    res.json({
+      data: rows,
+      meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) },
+    })
   } catch (err) {
     next(err)
   }

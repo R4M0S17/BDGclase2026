@@ -118,7 +118,12 @@ router.patch('/:commentId', authenticate, async (req: Request, res: Response, ne
       .where(eq(comments.id, commentId))
       .returning()
 
-    res.json(updated)
+    res.json({
+      id:        String(updated.id),
+      ticketId:  String(updated.ticketId),
+      text:      updated.body,
+      createdAt: updated.createdAt,
+    })
   } catch (err) {
     next(err)
   }

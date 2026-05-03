@@ -1,6 +1,6 @@
 # Estado API — Mini Jira Backend
 
-**Última actualización:** 2026-05-01
+**Última actualización:** 2026-05-03
 
 ---
 
@@ -17,9 +17,13 @@
 - Tablas: `users`, `projects`, `tickets`, `tags`, `ticket_assignees`, `ticket_tags`, `comments`, `audit_logs`
 - Enums: `ticket_status` (`todo | in_progress | review | done`), `ticket_priority`, `user_role`
 - `tickets.version` — columna para optimistic locking
-- `tickets.is_blocked` — añadido 2026-05-01 (migración manual + `drizzle/0003_add_is_blocked.sql`)
+- `tickets.is_blocked` — añadido 2026-05-01 (`drizzle/0003_add_is_blocked.sql`)
+- `tickets.project_id` — FK nullable a `projects`, `onDelete: SET NULL` (`drizzle/0005_add_project_id_to_tickets.sql`)
+- `tags.deleted_at` — soft delete en tags (`drizzle/0006_tags_soft_delete.sql`)
 - `users.oauth_provider` + `users.oauth_id` — soporte OAuth (sin `password_hash`)
 - Seed: `src/db/seed.ts` — 3 usuarios, 1 proyecto, 8 tickets, 4 tags, comentarios de ejemplo
+
+**Migraciones aplicadas:** `0000` → `0001` → `0002` → `0003` → `0004` → `0005` → `0006`
 
 ### H3 — Auth middleware
 - `src/middleware/auth.ts`
@@ -27,17 +31,17 @@
   - `requireAdmin` — guard 403 si `role !== 'admin'`
 
 ### H4 — Auth routes (`/auth`)
-- `POST /auth/oauth/callback` — intercambia código OAuth (Google o Microsoft), upsert de usuario, devuelve JWT 8h
+- `POST /auth/oauth/callback` — intercambia código OAuth (Google o Microsoft), upsert de usuario, devuelve JWT 8h; protegido con rate limit (20 req / 15 min)
 - `POST /auth/refresh` — dev-only: devuelve mock access token para que el interceptor Axios no limpie sesión
 - `POST /auth/dev-token` — genera JWT sin proveedor (solo `NODE_ENV=development`)
 - Proveedores soportados: Google (`GOOGLE_CLIENT_ID/SECRET`) y Microsoft Entra ID (`MICROSOFT_CLIENT_ID/SECRET/TENANT_ID`)
 
 ### H5 — Tickets (`/tickets`)
-- `GET    /tickets` — lista paginada con filtros: `status`, `priority`, `tagId`, `assigneeId`, `archived`; default `limit=20`, max `100`
-- `POST   /tickets` — crea ticket; acepta `tagIds[]` opcionales
+- `GET    /tickets` — lista paginada; filtros multi-valor: `status[]`, `priority[]`, `tagId`, `assigneeId`, `projectId`, `archived`; default `limit=20`, max `100`
+- `POST   /tickets` — crea ticket; acepta `projectId`, `isBlocked`, `tagIds[]` opcionales
 - `GET    /tickets/:id` — detalle con `assigneeIds[]` y `tagIds[]`
 - `PATCH  /tickets/:id/status` — cambia estado con **optimistic locking** (`version`); 409 en conflicto; inserta `audit_log`
-- `PATCH  /tickets/:id` — edita `title`, `description`, `priority`; inserta `audit_log` si cambia `priority`
+- `PATCH  /tickets/:id` — edita `title`, `description`, `priority`, `isBlocked`; requiere `version` (optimistic locking); inserta `audit_log` si cambia `priority`
 - `DELETE /tickets/:id` — soft delete (`archived_at`); solo admin; 422 si ya archivado
 - `POST   /tickets/:id/assignees` — agrega asignado; solo admin
 - `DELETE /tickets/:id/assignees/:userId` — quita asignado; solo admin
@@ -57,13 +61,23 @@
 
 ### H9 — Usuarios (`/users`)
 - `GET /me` — usuario autenticado actual (basado en `req.user.userId`)
-- `GET /` — lista usuarios (`id`, `name`, `email`, `role`); sin `password_hash`
+- `GET /` — lista paginada `{ data, meta }`; campos: `id`, `name`, `email`, `role`
 - `GET /:id` — usuario por ID
 - `PATCH /:id/role` — cambia rol; solo admin
 
 ### H10 — Métricas (`/metrics`)
 - `GET /metrics` — totales, tickets cerrados por mes, distribución por estado y por miembro activo
 - `GET /metrics/export` — descarga CSV streaming (RFC 4180); requiere `from` y `to`
+
+### H11 — Frontend: contrato API actualizado (2026-05-03)
+
+Cambios en `mini-jira/src/`:
+
+| Archivo | Cambio |
+|---------|--------|
+| `types/index.ts` | `Ticket` añade `projectId?: string \| null`; `User` elimina `avatarUrl?` |
+| `lib/api/tickets.ts` | `ApiTicket` añade `version` y `projectId`; mapper exportado; `version` leído del servidor (antes hardcodeado a 0) |
+| `hooks/useUsers.ts` | Adaptado a respuesta paginada `{ data, meta }` de `GET /users` |
 
 ---
 

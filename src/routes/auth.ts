@@ -2,10 +2,19 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 import { and, eq } from 'drizzle-orm'
+import rateLimit from 'express-rate-limit'
 import { db } from '../db/index.js'
 import { users } from '../db/schema.js'
 
 const router = Router()
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+})
 
 // ─── Provider config ──────────────────────────────────────────────────────────
 
@@ -78,7 +87,7 @@ const callbackSchema = z.object({
   redirectUri: z.string().url(),
 })
 
-router.post('/oauth/callback', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/oauth/callback', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = callbackSchema.safeParse(req.body)
     if (!parsed.success) {

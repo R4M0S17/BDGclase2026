@@ -2,7 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
 import { and, count, eq, isNull } from 'drizzle-orm'
 import { db } from '../db/index.js'
-import { projects } from '../db/schema.js'
+import { projects, tickets } from '../db/schema.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 
 const router = Router()
@@ -159,6 +159,33 @@ router.patch('/:id', authenticate, requireAdmin, async (req: Request, res: Respo
 
     const [updated] = await db.update(projects).set(set).where(eq(projects.id, id)).returning()
     res.json(updated)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// ─── GET /projects/:id/tickets ────────────────────────────────────────────────
+
+router.get('/:id/tickets', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = parseId(req.params.id)
+    await getProjectOrThrow(id)
+
+    const page  = Math.max(1, Number(req.query.page)  || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20))
+    const offset = (page - 1) * limit
+
+    const where = and(eq(tickets.projectId, id), isNull(tickets.archivedAt))
+
+    const [rows, [{ total }]] = await Promise.all([
+      db.select().from(tickets).where(where).limit(limit).offset(offset),
+      db.select({ total: count() }).from(tickets).where(where),
+    ])
+
+    res.json({
+      data: rows,
+      meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) },
+    })
   } catch (err) {
     next(err)
   }
